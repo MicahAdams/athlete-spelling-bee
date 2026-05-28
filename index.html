@@ -455,7 +455,7 @@ const ROSTER = [
     wiki: "Naomi_Osaka",
     clue: "Four-time Grand Slam champion, first Asian player ranked world No. 1",
     sentence: "Osaka's powerful serve and flat groundstrokes overwhelmed her opponent in straight sets.",
-    origin: "Japanese surname — Osaka (大阪) is also the name of Japan's second-largest city.",
+    origin: "Japanese surname — this name is also shared with Japan's second-largest city.",
     context: "Born 1997 to a Japanese mother and Haitian father; represents Japan internationally."
   },
   {
@@ -487,7 +487,7 @@ const ROSTER = [
     wiki: "Kristi_Yamaguchi",
     clue: "1992 Olympic gold medalist in figure skating from Hayward, California",
     sentence: "Yamaguchi's flawless free skate at Albertville captured America's hearts.",
-    origin: "Japanese — Yamaguchi (山口) means 'mountain entrance' in Japanese.",
+    origin: "Japanese — this surname means 'mountain entrance' in Japanese.",
     context: "First Asian-American woman to win Olympic gold in figure skating."
   },
   {
@@ -567,7 +567,7 @@ const ROSTER = [
     wiki: "Eliud_Kipchoge",
     clue: "Kenyan long-distance runner who broke the two-hour marathon barrier",
     sentence: "Kipchoge crossed the finish line alone, nearly two minutes ahead of his nearest rival.",
-    origin: "Kalenjin name from Kenya — Kipchoge means 'born near the grain storage'.",
+    origin: "Kalenjin name from Kenya — this name means 'born near the grain storage'.",
     context: "Two-time Olympic marathon champion; ran a 1:59:40 in Vienna in 2019."
   },
   {
@@ -583,7 +583,7 @@ const ROSTER = [
     wiki: "Mia_Hamm",
     clue: "American soccer icon and two-time World Cup champion who inspired a generation of players",
     sentence: "Hamm cut inside her defender and placed a low shot into the far corner.",
-    origin: "German-origin surname meaning 'water meadow' or referring to the city of Hamm.",
+    origin: "German-origin surname meaning 'water meadow', also the name of a city in Germany.",
     context: "Born 1972 in Alabama; held the world record for international goals for over a decade."
   },
   {
@@ -777,13 +777,23 @@ function playWord() {
 }
 
 /* ─── PROMPT HELPERS ─── */
+/* Replaces any occurrence of the athlete's last name (and full name) with [NAME]
+   so hints never give away the spelling answer. Case-insensitive. */
+function redact(text, athlete) {
+  const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let out = text;
+  // Redact full name first, then last name alone
+  out = out.replace(new RegExp(escape(athlete.full), 'gi'), '[NAME]');
+  out = out.replace(new RegExp(escape(athlete.last), 'gi'), '[NAME]');
+  return out;
+}
 function showPrompt(type) {
   const a = todayAthletes[current];
   const r = document.getElementById('prompt-resp');
   const map = {
-    sentence: { text: `"${a.sentence}"`, btn: 'pb-sentence' },
-    origin: { text: a.origin, btn: 'pb-origin' },
-    context: { text: a.context, btn: 'pb-context' }
+    sentence: { text: `"${redact(a.sentence, a)}"`, btn: 'pb-sentence' },
+    origin: { text: redact(a.origin, a), btn: 'pb-origin' },
+    context: { text: redact(a.context, a), btn: 'pb-context' }
   };
   const item = map[type]; if (!item) return;
   document.getElementById(item.btn).classList.add('used');
