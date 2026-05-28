@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Athlete Spelling Bee</title>
+  <meta name="description" content="Daily athlete spelling bee — 5 athletes, progressively harder. Can you spell them all?">
+  <meta property="og:title" content="Athlete Spelling Bee">
+  <meta property="og:description" content="Daily athlete spelling bee — 5 athletes, progressively harder.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Athlete Spelling Bee 🐝">
+  <meta name="twitter:description" content="Daily athlete spelling bee — can you spell all 5?">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.6.0/dist/tabler-icons.min.css">
+
+  <!-- GOOGLE SIGN-IN — replace YOUR_GOOGLE_CLIENT_ID below once you have one -->
+  <!-- Get one free at: https://console.cloud.google.com → APIs & Services → Credentials -->
+  <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg2: #f7f7f5;
+      --bg3: #efefec;
+      --text: #1a1a1a;
+      --text2: #6b6b6b;
+      --text3: #a0a0a0;
+      --border: rgba(0,0,0,0.10);
+      --border2: rgba(0,0,0,0.18);
+      --blue: #378ADD;
+      --blue-light: #E6F1FB;
+      --blue-dark: #185FA5;
+      --green: #1D9E75;
+      --green-light: #EAF3DE;
+      --green-dark: #3B6D11;
+      --red: #E24B4A;
+      --red-light: #FCEBEB;
+      --red-dark: #A32D2D;
+      --amber-light: #FAEEDA;
+      --amber-dark: #854F0B;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1e;
+        --bg2: #2c2c2e;
+        --bg3: #3a3a3c;
+        --text: #f2f2f7;
+        --text2: #aeaeb2;
+        --text3: #636366;
+        --border: rgba(255,255,255,0.10);
+        --border2: rgba(255,255,255,0.18);
+        --blue-light: #0c2a47;
+        --green-light: #0e2a1a;
+        --red-light: #2a0e0e;
+        --amber-light: #2a1e06;
+      }
+    }
+
+    html, body {
+      font-family: var(--font);
+      background: var(--bg3);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      max-width: 430px;
+      margin: 0 auto;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP BAR */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar-left { display: flex; align-items: center; gap: 8px; }
+    .top-bar-logo { font-size: 20px; }
+    .top-bar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .avatar-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 0.5px solid var(--border2);
+      background: var(--bg2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 13px; font-weight: 600;
+      color: var(--text2); overflow: hidden; flex-shrink: 0;
+    }
+    .avatar-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    /* TABS */
+    .tab-bar {
+      display: flex;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--bg);
+    }
+    .tab {
+      flex: 1; padding: 10px 4px; text-align: center;
+      font-size: 13px; color: var(--text2); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+      transition: color 0.15s;
+    }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+    .tab i { font-size: 14px; }
+
+    /* SCREENS */
+    .screen { padding: 16px; flex: 1; display: none; }
+    .screen.visible { display: block; }
+
+    /* GAME HEADER */
+    .bee-header { text-align: center; padding: 6px 0 14px; }
+    .bee-eyebrow { font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+    .bee-date { font-size: 19px; font-weight: 600; color: var(--text); }
+
+    /* PROGRESS DOTS */
+    .prog-row { display: flex; justify-content: center; gap: 8px; margin: 10px 0 14px; }
+    .dot {
+      width: 11px; height: 11px; border-radius: 50%;
+      background: var(--bg2); border: 0.5px solid var(--border2);
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .dot.done { background: var(--green); border-color: #0F6E56; }
+    .dot.active { background: var(--blue); border-color: var(--blue-dark); }
+    .dot.wrong { background: var(--red); border-color: var(--red-dark); }
+
+    /* STAT CARDS */
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; text-align: center; }
+    .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+    .stat-val { font-size: 24px; font-weight: 600; color: var(--text); }
+
+    /* ATHLETE CARD */
+    .athlete-card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .athlete-img-wrap {
+      position: relative;
+      height: 230px;
+      background: var(--bg2);
+      overflow: hidden;
+    }
+    .athlete-img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: top center;
+      display: block;
+    }
+    .img-loading {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100%; gap: 8px; color: var(--text3);
+    }
+    .img-loading i { font-size: 36px; }
+    .img-loading span { font-size: 12px; }
+    .sport-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(255,255,255,0.92);
+      border: 0.5px solid rgba(0,0,0,0.10);
+      border-radius: var(--radius);
+      padding: 4px 10px; font-size: 11px; font-weight: 500; color: #444;
+    }
+    .diff-badge {
+      position: absolute; top: 10px; left: 10px;
+      border-radius: var(--radius); padding: 4px 10px;
+      font-size: 11px; font-weight: 600;
+    }
+    .diff-1, .diff-2 { background: rgba(234,243,222,0.95); color: #3B6D11; }
+    .diff-3 { background: rgba(250,238,218,0.95); color: #854F0B; }
+    .diff-4, .diff-5 { background: rgba(252,235,235,0.95); color: #A32D2D; }
+    .wiki-credit {
+      position: absolute; bottom: 6px; right: 8px;
+      font-size: 10px; color: rgba(255,255,255,0.7);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    }
+    .athlete-body { padding: 12px 14px; }
+    .athlete-clue { font-size: 14px; color: var(--text); line-height: 1.6; }
+
+    /* PROMPT BUTTONS */
+    .prompt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .prompt-btn {
+      font-size: 12px; padding: 10px 6px;
+      border-radius: var(--radius); background: var(--bg2);
+      border: 0.5px solid var(--border); color: var(--text);
+      cursor: pointer; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: background 0.15s;
+    }
+    .prompt-btn:hover { background: var(--bg3); }
+    .prompt-btn.used { color: var(--text3); }
+    .prompt-btn i { font-size: 14px; }
+
+    .prompt-resp {
+      background: var(--bg2); border-radius: var(--radius);
+      padding: 10px 12px; margin-bottom: 12px;
+      font-size: 13px; color: var(--text); line-height: 1.6;
+      border-left: 2px solid var(--blue); display: none;
+    }
+
+    /* FEEDBACK */
+    .feedback {
+      text-align: center; padding: 10px 12px;
+      border-radius: var(--radius); margin-bottom: 12px;
+      font-size: 14px; font-weight: 500; display: none;
+    }
+    .feedback.correct { background: var(--green-light); color: var(--green-dark); }
+    .feedback.wrong { background: var(--red-light); color: var(--red-dark); }
+
+    /* INPUT */
+    .spell-label { font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+    .spell-input {
+      width: 100%; font-size: 22px; text-align: center;
+      letter-spacing: .1em; padding: 13px;
+      border-radius: var(--radius); border: 0.5px solid var(--border2);
+      background: var(--bg); color: var(--text); margin-bottom: 10px;
+      font-family: var(--font);
+    }
+    .spell-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(55,138,221,0.3); border-color: var(--blue); }
+
+    /* BUTTONS */
+    .btn-primary {
+      width: 100%; padding: 14px; font-size: 15px; font-weight: 500;
+      border-radius: var(--radius); border: none;
+      background: var(--blue); color: #fff;
+      cursor: pointer; margin-bottom: 8px; font-family: var(--font);
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      width: 100%; padding: 12px; font-size: 14px;
+      border-radius: var(--radius); border: 0.5px solid var(--border2);
+      background: var(--bg); color: var(--text);
+      cursor: pointer; margin-bottom: 8px; font-family: var(--font);
+    }
+    .btn-secondary:hover { background: var(--bg2); }
+    .btn-muted {
+      background: none; border: none; font-size: 12px;
+      color: var(--text3); cursor: pointer; padding: 4px 0;
+      display: block; width: 100%; text-align: center; font-family: var(--font);
+    }
+    .btn-muted:hover { color: var(--text2); }
+    .btn-google {
+      width: 100%; padding: 12px; font-size: 14px;
+      border-radius: var(--radius); border: 0.5px solid var(--border2);
+      background: var(--bg); color: var(--text);
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 10px; margin-bottom: 10px;
+      font-family: var(--font);
+    }
+    .btn-google:hover { background: var(--bg2); }
+    .google-logo { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* LEADERBOARD & PROFILE */
+    .card-section {
+      background: var(--bg); border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 10px; font-weight: 600; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .07em; margin-bottom: 12px;
+    }
+    .lb-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 0.5px solid var(--border);
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-rank { font-size: 14px; font-weight: 500; color: var(--text2); width: 26px; text-align: center; }
+    .lb-av {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--blue-light); display: flex; align-items: center;
+      justify-content: center; font-size: 13px; font-weight: 600;
+      color: var(--blue-dark); overflow: hidden; flex-shrink: 0;
+    }
+    .lb-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .lb-name { flex: 1; font-size: 14px; color: var(--text); }
+    .lb-meta { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .profile-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .profile-stat { background: var(--bg2); border-radius: var(--radius); padding: 10px; text-align: center; }
+    .profile-stat-val { font-size: 24px; font-weight: 600; color: var(--text); }
+    .profile-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+    /* MODAL */
+    .modal-back {
+      min-height: 260px; background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+    }
+    .modal {
+      background: var(--bg); border-radius: var(--radius-lg);
+      padding: 24px 20px; width: 100%; max-width: 320px; text-align: center;
+    }
+    .modal h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .modal p { font-size: 14px; color: var(--text2); margin-bottom: 18px; line-height: 1.55; }
+
+    /* RESULTS */
+    .result-list {
+      text-align: left; background: var(--bg2);
+      border-radius: var(--radius); padding: 8px 12px; margin-bottom: 14px;
+    }
+    .result-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; border-bottom: 0.5px solid var(--border);
+      font-size: 14px; color: var(--text);
+    }
+    .result-row:last-child { border-bottom: none; }
+
+    /* GATE BANNER */
+    .gate-banner {
+      background: var(--blue-light); border-radius: var(--radius);
+      padding: 12px; margin-bottom: 12px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .gate-banner i { color: var(--blue-dark); font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .gate-banner p { font-size: 13px; color: var(--blue-dark); line-height: 1.5; }
+
+    /* LOADING */
+    .loading-screen { text-align: center; padding: 3rem 1rem; }
+    .spinner {
+      width: 32px; height: 32px; border: 2px solid var(--border);
+      border-top-color: var(--blue); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* FINISHED */
+    .finished-wrap { text-align: center; padding: 8px 0; }
+    .fin-icon { font-size: 52px; margin-bottom: 12px; }
+    .fin-score { font-size: 30px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .fin-msg { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
+
+    /* SAFE AREA for notched phones */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      #app { padding-bottom: env(safe-area-inset-bottom); }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <span class="top-bar-logo">🐝</span>
+      <span class="top-bar-title">Athlete Spelling Bee</span>
+    </div>
+    <div id="user-btn" class="avatar-btn" onclick="toggleUserMenu()" title="Account">
+      <i class="ti ti-user" style="font-size:16px" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" id="tab-play" onclick="switchTab('play')">
+      <i class="ti ti-writing" aria-hidden="true"></i> Play
+    </div>
+    <div class="tab" id="tab-lb" onclick="switchTab('lb')">
+      <i class="ti ti-trophy" aria-hidden="true"></i> Leaderboard
+    </div>
+    <div class="tab" id="tab-profile" onclick="switchTab('profile')">
+      <i class="ti ti-chart-bar" aria-hidden="true"></i> My Stats
+    </div>
+  </div>
+
+  <!-- PLAY SCREEN -->
+  <div id="screen-play" class="screen visible">
+    <div class="bee-header">
+      <div class="bee-eyebrow">Daily Challenge</div>
+      <div class="bee-date" id="date-label"></div>
+    </div>
+    <div class="prog-row" id="progress"></div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Correct</div>
+        <div class="stat-val" id="correct-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Streak</div>
+        <div class="stat-val" id="streak-count">0</div>
+      </div>
+    </div>
+    <div id="game-area"></div>
+    <div id="finished-area" style="display:none"></div>
+  </div>
+
+  <!-- LEADERBOARD SCREEN -->
+  <div id="screen-lb" class="screen">
+    <div style="margin-bottom:16px">
+      <div style="font-size:20px;font-weight:600;color:var(--text);margin-bottom:4px">Leaderboard</div>
+      <div style="font-size:13px;color:var(--text2)">Top players — all-time total score</div>
+    </div>
+    <div class="card-section">
+      <div id="lb-list"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div id="screen-profile" class="screen">
+    <div id="profile-content"></div>
+  </div>
+
+</div><!-- #app -->
+
+<script>
+/* ─── GOOGLE SVG ─── */
+const GSVG = `<svg class="google-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+</svg>`;
+
+/* ─── FULL ATHLETE ROSTER ─── */
+/* Rule: only athletes with confirmed Wikipedia photos. Add more here as needed.
+   Each entry has a 'wiki' field = exact Wikipedia page title (used to fetch the image).
+   Test any new athlete at: https://en.wikipedia.org/wiki/[wiki_title] */
+const ROSTER = [
+  {
+    last: "Djokovic", full: "Novak Djokovic", sport: "Tennis", difficulty: 4,
+    wiki: "Novak_Djokovic",
+    clue: "Serbian tennis superstar with the most men's Grand Slam singles titles in history",
+    sentence: "Djokovic saved two match points before claiming his record-breaking title.",
+    origin: "Serbian surname — pronounced Dyo-KOH-vich; the final 'c' is silent.",
+    context: "Born in Belgrade 1987; turned pro 2003 and dominated throughout the 2010s and 2020s."
+  },
+  {
+    last: "Mahomes", full: "Patrick Mahomes", sport: "Football", difficulty: 2,
+    wiki: "Patrick_Mahomes",
+    clue: "Kansas City Chiefs quarterback and multiple Super Bowl champion",
+    sentence: "Mahomes launched a no-look pass 50 yards downfield for the go-ahead score.",
+    origin: "Believed to have French Creole roots from Louisiana.",
+    context: "Won his first NFL MVP in 2018 at age 23, throwing 50 touchdowns that season."
+  },
+  {
+    last: "Osaka", full: "Naomi Osaka", sport: "Tennis", difficulty: 2,
+    wiki: "Naomi_Osaka",
+    clue: "Four-time Grand Slam champion, first Asian player ranked world No. 1",
+    sentence: "Osaka's powerful serve and flat groundstrokes overwhelmed her opponent in straight sets.",
+    origin: "Japanese surname — Osaka (大阪) is also the name of Japan's second-largest city.",
+    context: "Born 1997 to a Japanese mother and Haitian father; represents Japan internationally."
+  },
+  {
+    last: "Antetokounmpo", full: "Giannis Antetokounmpo", sport: "Basketball", difficulty: 5,
+    wiki: "Giannis_Antetokounmpo",
+    clue: "Milwaukee Bucks forward nicknamed 'The Greek Freak', two-time NBA MVP",
+    sentence: "Antetokounmpo drove baseline and threw down a thunderous dunk over two defenders.",
+    origin: "Greek surname of Nigerian Yoruba origin — his family emigrated from Nigeria to Greece.",
+    context: "Born in Athens 1994 to Nigerian parents; drafted 15th overall in 2013."
+  },
+  {
+    last: "Biles", full: "Simone Biles", sport: "Gymnastics", difficulty: 2,
+    wiki: "Simone_Biles",
+    clue: "The most decorated American gymnast ever, with multiple Olympic gold medals",
+    sentence: "Biles stuck a near-perfect landing on the floor exercise, leaving judges scrambling.",
+    origin: "English surname — common in the United States and United Kingdom.",
+    context: "Born 1997 in Columbus, Ohio; has four gymnastics skills named after her."
+  },
+  {
+    last: "Scherzer", full: "Max Scherzer", sport: "Baseball", difficulty: 3,
+    wiki: "Max_Scherzer",
+    clue: "Three-time Cy Young Award winner nicknamed 'Mad Max', famous for his no-hitters",
+    sentence: "Scherzer painted the outside corner with a 97-mph fastball to end the inning.",
+    origin: "German/Austrian surname — common in central Europe.",
+    context: "Born 1984 in Missouri; known for heterochromia — one blue eye, one brown eye."
+  },
+  {
+    last: "Yamaguchi", full: "Kristi Yamaguchi", sport: "Figure Skating", difficulty: 4,
+    wiki: "Kristi_Yamaguchi",
+    clue: "1992 Olympic gold medalist in figure skating from Hayward, California",
+    sentence: "Yamaguchi's flawless free skate at Albertville captured America's hearts.",
+    origin: "Japanese — Yamaguchi (山口) means 'mountain entrance' in Japanese.",
+    context: "First Asian-American woman to win Olympic gold in figure skating."
+  },
+  {
+    last: "Wambach", full: "Abby Wambach", sport: "Soccer", difficulty: 3,
+    wiki: "Abby_Wambach",
+    clue: "Retired US Women's National Team striker and FIFA World Player of the Year",
+    sentence: "Wambach rose above the defense and powered a header into the top corner.",
+    origin: "German-origin surname brought to the US by immigrant families.",
+    context: "Scored 184 international goals — the all-time record across men's and women's soccer."
+  },
+  {
+    last: "Bolt", full: "Usain Bolt", sport: "Track & Field", difficulty: 1,
+    wiki: "Usain_Bolt",
+    clue: "Jamaican sprinter and the fastest human ever recorded — triple double Olympic champion",
+    sentence: "Bolt glanced at his rivals at 80 meters and still broke the world record.",
+    origin: "English occupational surname — originally referred to a bolt or lock maker.",
+    context: "Set the 100m world record of 9.58s and 200m record of 19.19s in Berlin 2009."
+  },
+  {
+    last: "Federer", full: "Roger Federer", sport: "Tennis", difficulty: 2,
+    wiki: "Roger_Federer",
+    clue: "Swiss tennis legend with 20 Grand Slam titles, widely regarded as one of the greatest ever",
+    sentence: "Federer sliced a backhand winner down the line that left the crowd breathless.",
+    origin: "Swiss-German surname — derived from the German word for feather merchant.",
+    context: "Won his first Wimbledon in 2003; retired in September 2022."
+  },
+  {
+    last: "Ohno", full: "Apolo Ohno", sport: "Speed Skating", difficulty: 3,
+    wiki: "Apolo_Ohno",
+    clue: "Eight-time Olympic medalist in short-track speed skating, the most decorated US Winter Olympian",
+    sentence: "Ohno drafted behind the leader until the final turn, then exploded to the inside.",
+    origin: "Japanese-American surname — his father is American, his mother Japanese.",
+    context: "Born in Seattle 1982; competed in the 2002, 2006, and 2010 Winter Olympics."
+  },
+  {
+    last: "Gretzky", full: "Wayne Gretzky", sport: "Hockey", difficulty: 2,
+    wiki: "Wayne_Gretzky",
+    clue: "Known simply as 'The Great One' — the NHL's all-time leading scorer by an enormous margin",
+    sentence: "Gretzky set up the game-winning goal from behind the net, his favourite spot on the ice.",
+    origin: "Ukrainian-origin surname — his family roots are in Ukraine.",
+    context: "Born 1961 in Ontario; scored more goals than any other player has points in NHL history."
+  },
+  {
+    last: "Sharapova", full: "Maria Sharapova", sport: "Tennis", difficulty: 4,
+    wiki: "Maria_Sharapova",
+    clue: "Russian tennis star and five-time Grand Slam champion who turned pro at age 14",
+    sentence: "Sharapova bludgeoned a forehand winner to close out the match in three sets.",
+    origin: "Russian feminine surname — the masculine form is Sharapov.",
+    context: "Born 1987 in Nyagan, Siberia; won her first Wimbledon at just 17 years old."
+  },
+  {
+    last: "Okafor", full: "Emeka Okafor", sport: "Basketball", difficulty: 3,
+    wiki: "Emeka_Okafor",
+    clue: "NBA center, 2004 #2 overall draft pick renowned for elite shot-blocking",
+    sentence: "Okafor rejected a layup and immediately pushed the pace in transition.",
+    origin: "Igbo origin from Nigeria — a common West African surname.",
+    context: "Played in the NBA 2004–2013; multiple All-Defensive team candidate."
+  },
+  {
+    last: "Beckham", full: "David Beckham", sport: "Soccer", difficulty: 2,
+    wiki: "David_Beckham",
+    clue: "English midfielder famous for his pinpoint free kicks and global celebrity status",
+    sentence: "Beckham bent a 30-yard free kick around the wall and into the top corner.",
+    origin: "English surname — derived from a place in Norfolk meaning 'Becca's homestead'.",
+    context: "Won six Premier League titles with Manchester United; later played for Real Madrid and LA Galaxy."
+  },
+  {
+    last: "Swoopes", full: "Sheryl Swoopes", sport: "Basketball", difficulty: 4,
+    wiki: "Sheryl_Swoopes",
+    clue: "WNBA pioneer and first player signed to the league, three-time Olympic gold medalist",
+    sentence: "Swoopes drained a pull-up jumper at the buzzer to seal the championship.",
+    origin: "English surname — a variant of 'Swoope', of uncertain origin.",
+    context: "Born 1971 in Texas; won three WNBA MVP awards and four championships."
+  },
+  {
+    last: "Kipchoge", full: "Eliud Kipchoge", sport: "Marathon", difficulty: 4,
+    wiki: "Eliud_Kipchoge",
+    clue: "Kenyan long-distance runner who broke the two-hour marathon barrier",
+    sentence: "Kipchoge crossed the finish line alone, nearly two minutes ahead of his nearest rival.",
+    origin: "Kalenjin name from Kenya — Kipchoge means 'born near the grain storage'.",
+    context: "Two-time Olympic marathon champion; ran a 1:59:40 in Vienna in 2019."
+  },
+  {
+    last: "Phelps", full: "Michael Phelps", sport: "Swimming", difficulty: 2,
+    wiki: "Michael_Phelps",
+    clue: "The most decorated Olympian of all time with 23 gold medals in swimming",
+    sentence: "Phelps touched the wall by one-hundredth of a second to claim another gold.",
+    origin: "English surname — derived from the given name Phelp, a form of Philip.",
+    context: "Born 1985 in Baltimore; competed in five Olympic Games from 2000 to 2016."
+  },
+  {
+    last: "Hamm", full: "Mia Hamm", sport: "Soccer", difficulty: 2,
+    wiki: "Mia_Hamm",
+    clue: "American soccer icon and two-time World Cup champion who inspired a generation of players",
+    sentence: "Hamm cut inside her defender and placed a low shot into the far corner.",
+    origin: "German-origin surname meaning 'water meadow' or referring to the city of Hamm.",
+    context: "Born 1972 in Alabama; held the world record for international goals for over a decade."
+  },
+  {
+    last: "Szabo", full: "Ecaterina Szabo", sport: "Gymnastics", difficulty: 5,
+    wiki: "Ecaterina_Szabo",
+    clue: "Romanian gymnast who won four gold medals at the 1984 Los Angeles Olympics",
+    sentence: "Szabo's beam routine combined power and artistry in a way judges had rarely seen.",
+    origin: "Hungarian surname meaning 'tailor' — common in Romania's Hungarian-speaking community.",
+    context: "Born 1968 in Romania; she was World All-Around Champion in 1983 and 1984."
+  }
+];
+
+const DIFF_LABELS = ['', 'Beginner', 'Easy', 'Medium', 'Hard', 'Expert'];
+const WIKI_API = t => `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(t)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
+
+/* ─── STATE ─── */
+let todayAthletes = [];
+let current = 0, correctCount = 0, streak = 0, results = [];
+let user = null, allScores = [];
+
+/* ─── DATE HELPERS ─── */
+function todayLabel() {
+  return new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+function dateSeed() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+function seededShuffle(arr, seed) {
+  const a = [...arr]; let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (Math.imul(s, 1664525) + 1013904223) | 0;
+    const j = Math.abs(s) % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ─── WIKIPEDIA IMAGE FETCH ─── */
+async function fetchWikiImage(wikiTitle) {
+  try {
+    const res = await fetch(WIKI_API(wikiTitle));
+    const data = await res.json();
+    const pages = data.query.pages;
+    const page = pages[Object.keys(pages)[0]];
+    return page.thumbnail ? page.thumbnail.source : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/* ─── BUILD DAILY ROSTER ─── */
+/* Shuffles all athletes by today's date seed, then picks the first 5 that
+   return a Wikipedia photo. Same 5 athletes for everyone on the same day. */
+async function buildDailyRoster() {
+  const shuffled = seededShuffle(ROSTER, dateSeed());
+  const confirmed = [];
+  for (const athlete of shuffled) {
+    if (confirmed.length >= 5) break;
+    const imgUrl = await fetchWikiImage(athlete.wiki);
+    if (imgUrl) confirmed.push({ ...athlete, imgUrl });
+  }
+  return confirmed;
+}
+
+/* ─── STORAGE (localStorage for user; in-memory for leaderboard in demo) ─── */
+/* NOTE: Replace the in-memory leaderboard below with a real backend
+   (Firebase, Supabase, etc.) when you're ready for production. */
+function loadScores() {
+  try {
+    const raw = localStorage.getItem('bee_lb_v3');
+    allScores = raw ? JSON.parse(raw) : [];
+  } catch (e) { allScores = []; }
+}
+function saveScores() {
+  try { localStorage.setItem('bee_lb_v3', JSON.stringify(allScores)); } catch (e) {}
+}
+async function recordScore(score, bestStreak) {
+  if (!user) return;
+  const idx = allScores.findIndex(s => s.uid === user.uid);
+  if (idx >= 0) {
+    allScores[idx].total += score;
+    allScores[idx].bestStreak = Math.max(allScores[idx].bestStreak || 0, bestStreak);
+    allScores[idx].gamesPlayed = (allScores[idx].gamesPlayed || 0) + 1;
+    allScores[idx].name = user.name;
+    if (user.photo) allScores[idx].photo = user.photo;
+  } else {
+    allScores.push({ uid: user.uid, name: user.name, photo: user.photo || null, total: score, bestStreak, gamesPlayed: 1 });
+  }
+  allScores.sort((a, b) => b.total - a.total);
+  saveScores();
+}
+
+/* ─── USER AUTH (mock — swap with real Google OAuth) ─── */
+/* TO USE REAL GOOGLE SIGN-IN:
+   1. Go to https://console.cloud.google.com
+   2. Create a project → APIs & Services → Credentials → OAuth 2.0 Client ID
+   3. Set Authorized JavaScript origins to your GitHub Pages URL
+   4. Replace YOUR_GOOGLE_CLIENT_ID below
+   5. Uncomment the <script> tag for accounts.google.com in the <head>
+   6. Replace mockGoogleLogin() with the real initializeGoogleSignIn() call below */
+
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // ← paste your client ID here
+
+// Real Google Sign-In (uncomment when you have a client ID):
+// function initializeGoogleSignIn() {
+//   google.accounts.id.initialize({
+//     client_id: GOOGLE_CLIENT_ID,
+//     callback: handleGoogleCredential
+//   });
+// }
+// function handleGoogleCredential(response) {
+//   const payload = JSON.parse(atob(response.credential.split('.')[1]));
+//   user = { uid: payload.sub, name: payload.name, photo: payload.picture, email: payload.email };
+//   saveUserToStorage(); updateUserBtn(); renderProfile();
+// }
+// function signInWithGoogle() {
+//   google.accounts.id.prompt();
+// }
+
+function loadUserFromStorage() {
+  try { const u = localStorage.getItem('bee_user_v3'); if (u) { user = JSON.parse(u); updateUserBtn(); } } catch (e) {}
+}
+function saveUserToStorage() {
+  try { localStorage.setItem('bee_user_v3', JSON.stringify(user)); } catch (e) {}
+}
+function updateUserBtn() {
+  const btn = document.getElementById('user-btn');
+  if (user && user.photo) {
+    btn.innerHTML = `<img src="${user.photo}" alt="${user.name}">`;
+  } else if (user) {
+    btn.textContent = (user.name || '?').charAt(0).toUpperCase();
+    btn.style.background = 'var(--blue-light)'; btn.style.color = 'var(--blue-dark)';
+  } else {
+    btn.innerHTML = `<i class="ti ti-user" style="font-size:16px" aria-hidden="true"></i>`;
+    btn.style.background = ''; btn.style.color = '';
+  }
+}
+function toggleUserMenu() { if (user) switchTab('profile'); else showLoginModal(); }
+
+/* Demo mock login — remove when real Google OAuth is wired in */
+const MOCK_NAMES = ['Alex Rivera', 'Jordan Kim', 'Sam Patel', 'Taylor Osei', 'Casey Nguyen'];
+function mockGoogleLogin() {
+  const n = MOCK_NAMES[Math.floor(Math.random() * MOCK_NAMES.length)];
+  user = { uid: 'u_' + Math.random().toString(36).slice(2, 9), name: n, photo: null, email: n.toLowerCase().replace(' ', '.') + '@example.com' };
+  saveUserToStorage(); updateUserBtn();
+  const m = document.getElementById('login-modal'); if (m) m.remove();
+  renderProfile();
+}
+async function mockGoogleLoginAndSave() {
+  mockGoogleLogin();
+  await recordScore(correctCount, streak);
+  renderLB(); renderProfile(); showFinished();
+}
+function signOut() {
+  user = null;
+  try { localStorage.removeItem('bee_user_v3'); } catch (e) {}
+  updateUserBtn(); renderProfile(); switchTab('play');
+}
+
+/* ─── MODALS ─── */
+function showLoginModal() {
+  if (document.getElementById('login-modal')) return;
+  const m = document.createElement('div');
+  m.id = 'login-modal'; m.className = 'modal-back';
+  m.innerHTML = `<div class="modal">
+    <div style="font-size:36px;margin-bottom:10px">🐝</div>
+    <h2>Sign in to save progress</h2>
+    <p>Play without signing in anytime. Sign in with Google to track streaks, best scores, and appear on the leaderboard.</p>
+    <button class="btn-google" onclick="mockGoogleLogin()">${GSVG}Continue with Google</button>
+    <button class="btn-muted" onclick="document.getElementById('login-modal').remove()">Continue as guest</button>
+  </div>`;
+  document.getElementById('game-area').prepend(m);
+}
+
+/* ─── PROGRESS DOTS ─── */
+function buildProgress() {
+  const p = document.getElementById('progress'); p.innerHTML = '';
+  todayAthletes.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < current ? (results[i] ? ' done' : ' wrong') : i === current ? ' active' : '');
+    p.appendChild(d);
+  });
+}
+
+/* ─── AUDIO ─── */
+function playWord() {
+  const a = todayAthletes[current]; if (!a || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(a.full); u.rate = 0.82;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ─── PROMPT HELPERS ─── */
+function showPrompt(type) {
+  const a = todayAthletes[current];
+  const r = document.getElementById('prompt-resp');
+  const map = {
+    sentence: { text: `"${a.sentence}"`, btn: 'pb-sentence' },
+    origin: { text: a.origin, btn: 'pb-origin' },
+    context: { text: a.context, btn: 'pb-context' }
+  };
+  const item = map[type]; if (!item) return;
+  document.getElementById(item.btn).classList.add('used');
+  r.textContent = item.text; r.style.display = 'block';
+}
+
+/* ─── RENDER ATHLETE CARD ─── */
+function renderAthleteCard(a) {
+  return `<div class="athlete-card">
+    <div class="athlete-img-wrap">
+      <img class="athlete-img" src="${a.imgUrl}" alt="Photo of ${a.full}"
+        onerror="this.parentElement.innerHTML='<div class=img-loading><i class=ti ti-user-circle></i><span>Photo unavailable</span></div>'">
+      <span class="sport-badge">${a.sport}</span>
+      <span class="diff-badge diff-${a.difficulty}">${DIFF_LABELS[a.difficulty]}</span>
+      <span class="wiki-credit">Photo: Wikipedia / CC</span>
+    </div>
+    <div class="athlete-body"><div class="athlete-clue">${a.clue}</div></div>
+  </div>`;
+}
+
+/* ─── LOAD ATHLETE ROUND ─── */
+function loadAthleteRound() {
+  if (current >= todayAthletes.length) { showFinished(); return; }
+  const a = todayAthletes[current];
+  document.getElementById('correct-count').textContent = correctCount;
+  document.getElementById('streak-count').textContent = streak;
+  buildProgress();
+  document.getElementById('game-area').innerHTML = `
+    ${renderAthleteCard(a)}
+    <div class="prompt-grid">
+      <button class="prompt-btn" id="pb-sentence" onclick="showPrompt('sentence')"><i class="ti ti-quote" aria-hidden="true"></i>In a sentence</button>
+      <button class="prompt-btn" id="pb-origin" onclick="showPrompt('origin')"><i class="ti ti-world" aria-hidden="true"></i>Name origin</button>
+      <button class="prompt-btn" id="pb-context" onclick="showPrompt('context')"><i class="ti ti-info-circle" aria-hidden="true"></i>More context</button>
+      <button class="prompt-btn" id="pb-audio" onclick="playWord()"><i class="ti ti-volume" aria-hidden="true"></i>Hear name</button>
+    </div>
+    <div class="prompt-resp" id="prompt-resp"></div>
+    <div class="feedback" id="feedback"></div>
+    <div style="margin-bottom:10px">
+      <div class="spell-label">Spell the athlete's last name:</div>
+      <input class="spell-input" id="spell-input" type="text"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        placeholder="type here…" onkeydown="if(event.key==='Enter')submitAnswer()">
+    </div>
+    <button class="btn-primary" onclick="submitAnswer()">Submit</button>
+    <button class="btn-secondary" id="next-btn" style="display:none" onclick="nextAthlete()">Next athlete →</button>
+    <button class="btn-muted" onclick="skipAthlete()">skip</button>`;
+  setTimeout(() => { const i = document.getElementById('spell-input'); if (i) i.focus(); }, 150);
+}
+
+/* ─── GAME ACTIONS ─── */
+function submitAnswer() {
+  const a = todayAthletes[current];
+  const val = (document.getElementById('spell-input').value || '').trim().toLowerCase();
+  const fb = document.getElementById('feedback'); if (!val) return;
+  const ok = val === a.last.toLowerCase();
+  fb.textContent = ok ? `✓ Correct! ${a.full}` : `✗ The correct spelling is: ${a.last}`;
+  fb.className = 'feedback ' + (ok ? 'correct' : 'wrong'); fb.style.display = 'block';
+  if (ok) { correctCount++; streak++; } else { streak = 0; }
+  results[current] = ok;
+  document.getElementById('spell-input').disabled = true;
+  document.getElementById('next-btn').style.display = 'block';
+  document.getElementById('correct-count').textContent = correctCount;
+  document.getElementById('streak-count').textContent = streak;
+  buildProgress();
+}
+function skipAthlete() {
+  results[current] = false; streak = 0;
+  const fb = document.getElementById('feedback');
+  fb.textContent = `Skipped — the answer was: ${todayAthletes[current].last}`;
+  fb.className = 'feedback wrong'; fb.style.display = 'block';
+  document.getElementById('spell-input').disabled = true;
+  document.getElementById('next-btn').style.display = 'block';
+  document.getElementById('streak-count').textContent = streak;
+  buildProgress();
+}
+function nextAthlete() { current++; loadAthleteRound(); }
+
+/* ─── FINISHED SCREEN ─── */
+async function showFinished() {
+  document.getElementById('game-area').style.display = 'none';
+  const area = document.getElementById('finished-area'); area.style.display = 'block';
+  const icon = correctCount === 5 ? '🏆' : correctCount >= 3 ? '🥈' : '🐝';
+  const msg = correctCount === 5 ? 'Perfect score! You nailed every athlete!' :
+    correctCount >= 3 ? 'Great job — you know your athletes!' : 'Keep practicing, these names are tricky!';
+  const rows = todayAthletes.map((a, i) =>
+    `<div class="result-row"><span>${a.full}</span><span>${results[i] ? '✓' : '✗'}</span></div>`).join('');
+  const gateHTML = !user
+    ? `<div class="gate-banner"><i class="ti ti-lock" aria-hidden="true"></i><p>Sign in with Google to save this score to the leaderboard and track your personal bests.</p></div>
+       <button class="btn-google" onclick="mockGoogleLoginAndSave()" style="margin-bottom:12px">${GSVG}Sign in &amp; save score</button>`
+    : `<div style="background:var(--green-light);border-radius:var(--radius);padding:10px;margin-bottom:12px;font-size:13px;color:var(--green-dark);text-align:center"><i class="ti ti-check" aria-hidden="true"></i> Score saved to leaderboard!</div>`;
+  area.innerHTML = `<div class="finished-wrap">
+    <div class="fin-icon">${icon}</div>
+    <div class="fin-score">${correctCount} / 5 correct</div>
+    <div class="fin-msg">${msg}</div>
+    <div class="result-list">${rows}</div>
+    ${gateHTML}
+    <button class="btn-secondary" onclick="shareResult()"><i class="ti ti-share" aria-hidden="true"></i> Share result</button>
+    <button class="btn-muted" style="margin-top:8px" onclick="restartGame()">Play again</button>
+  </div>`;
+  if (user) { await recordScore(correctCount, streak); renderLB(); renderProfile(); }
+}
+
+function shareResult() {
+  const dots = results.map(r => r ? '🟩' : '🟥').join('');
+  const text = `🐝 Athlete Spelling Bee — ${todayLabel()}\n${correctCount}/5 ${dots}\nPlay at: ${location.href}`;
+  if (navigator.share) navigator.share({ text });
+  else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+  else alert(text);
+}
+
+function restartGame() {
+  current = 0; correctCount = 0; streak = 0; results = [];
+  document.getElementById('finished-area').style.display = 'none';
+  document.getElementById('game-area').style.display = 'block';
+  document.getElementById('correct-count').textContent = '0';
+  document.getElementById('streak-count').textContent = '0';
+  loadAthleteRound();
+}
+
+/* ─── LEADERBOARD ─── */
+function renderLB() {
+  const el = document.getElementById('lb-list');
+  if (!allScores.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:14px;padding:12px 0;text-align:center">No scores yet — be the first!</div>';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  el.innerHTML = allScores.slice(0, 10).map((s, i) => {
+    const ini = (s.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const av = s.photo ? `<img src="${s.photo}" alt="${s.name}">` : ini;
+    return `<div class="lb-row">
+      <div class="lb-rank">${medals[i] || i + 1}</div>
+      <div class="lb-av">${av}</div>
+      <div style="flex:1">
+        <div class="lb-name">${s.name}</div>
+        <div class="lb-meta">${s.gamesPlayed || 1} game${(s.gamesPlayed || 1) !== 1 ? 's' : ''} · best streak ${s.bestStreak || 0}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:14px;font-weight:600;color:var(--text)">${s.total}</div>
+        <div style="font-size:11px;color:var(--text3)">pts</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── PROFILE ─── */
+function renderProfile() {
+  const el = document.getElementById('profile-content');
+  if (!user) {
+    el.innerHTML = `<div style="text-align:center;padding:2.5rem 1rem">
+      <div style="font-size:44px;margin-bottom:14px">🐝</div>
+      <div style="font-size:20px;font-weight:600;color:var(--text);margin-bottom:8px">Track your progress</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:22px;line-height:1.6">Sign in with Google to save scores, build streaks, and compete on the leaderboard.</div>
+      <button class="btn-google" onclick="mockGoogleLogin();renderProfile()">${GSVG}Continue with Google</button>
+      <button class="btn-muted" onclick="switchTab('play')">Back to game</button>
+    </div>`;
+    return;
+  }
+  const me = allScores.find(s => s.uid === user.uid);
+  const rank = allScores.findIndex(s => s.uid === user.uid) + 1;
+  const ini = (user.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const avHTML = user.photo ? `<img src="${user.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : ini;
+  el.innerHTML = `
+    <div class="card-section" style="text-align:center;margin-bottom:12px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:var(--blue-dark);margin:0 auto 10px;overflow:hidden">${avHTML}</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text)">${user.name}</div>
+      <div style="font-size:13px;color:var(--text2)">${user.email || ''}</div>
+    </div>
+    <div class="card-section">
+      <div class="section-title">My stats</div>
+      <div class="profile-stat-grid">
+        <div class="profile-stat"><div class="profile-stat-val">${me ? me.total : 0}</div><div class="profile-stat-label">Total pts</div></div>
+        <div class="profile-stat"><div class="profile-stat-val">${rank > 0 ? '#' + rank : '—'}</div><div class="profile-stat-label">Global rank</div></div>
+        <div class="profile-stat"><div class="profile-stat-val">${me ? me.gamesPlayed || 1 : 0}</div><div class="profile-stat-label">Games played</div></div>
+        <div class="profile-stat"><div class="profile-stat-val">${me ? me.bestStreak || 0 : 0}</div><div class="profile-stat-label">Best streak</div></div>
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="switchTab('play')" style="margin-top:4px">Back to game</button>
+    <button class="btn-muted" style="margin-top:4px" onclick="signOut()">Sign out</button>`;
+}
+
+/* ─── TAB SWITCHING ─── */
+function switchTab(name) {
+  ['play', 'lb', 'profile'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('screen-' + t).classList.toggle('visible', t === name);
+  });
+  if (name === 'lb') renderLB();
+  if (name === 'profile') renderProfile();
+}
+
+/* ─── INIT ─── */
+async function init() {
+  document.getElementById('date-label').textContent = todayLabel();
+  loadUserFromStorage();
+  loadScores();
+  renderLB();
+  renderProfile();
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <div style="font-size:14px;color:var(--text2)">Confirming athlete photos for today…</div>
+    </div>`;
+
+  todayAthletes = await buildDailyRoster();
+
+  if (todayAthletes.length < 5) {
+    document.getElementById('game-area').innerHTML = `
+      <div style="text-align:center;padding:2.5rem;font-size:14px;color:var(--text2);line-height:1.6">
+        Could not load today's athletes.<br>Please check your connection and refresh the page.
+      </div>`;
+    return;
+  }
+  loadAthleteRound();
+}
+
+init();
+</script>
+</body>
+</html>
